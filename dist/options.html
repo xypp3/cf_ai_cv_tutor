@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>CF AI CV Tuner Options</title>
+    <style>
+      body { font-family: sans-serif; max-width: 640px; margin: 16px auto; padding: 0 12px; }
+      label { display: block; margin: 8px 0 4px; font-weight: 600; }
+      input[type="text"], input[type="password"] { width: 100%; padding: 6px; }
+      .row { margin-bottom: 12px; }
+    </style>
+    <script type="module" crossorigin src="/options.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="modulepreload" crossorigin href="/assets/ai-D-TKNj7T.js">
+    <link rel="modulepreload" crossorigin href="/assets/storage-f782W3AR.js">
+    <link rel="modulepreload" crossorigin href="/assets/_commonjsHelpers-Cpj98o6Y.js">
+  </head>
+  <body>
+    <h2>Cloudflare Worker</h2>
+    <div class="row">
+      <label for="worker-base">Worker Base URL</label>
+      <input id="worker-base" type="text" placeholder="https://your-worker.example.workers.dev" />
+    </div>
+    <div class="row">
+      <label for="worker-token">Worker Token (Bearer)</label>
+      <input id="worker-token" type="password" placeholder="********" />
+    </div>
+    <button id="save-creds">Save</button>
+
+    <h2>Upload CV (DOCX)</h2>
+    <input id="cv-upload" type="file" accept=".docx" />
+
+    <div id="status" style="margin-top:12px;color:#444;"></div>
+  </body>
+</html>

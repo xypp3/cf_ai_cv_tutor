@@ -1,0 +1,1 @@
+async function c(a){await chrome.storage.local.set({secrets:a})}async function e(){const{secrets:a}=await chrome.storage.local.get("secrets");return a||{}}async function s(a){await chrome.storage.local.set({cvPlain:a})}async function t(){const{cvPlain:a}=await chrome.storage.local.get("cvPlain");return a||null}export{s as a,t as b,e as l,c as s};

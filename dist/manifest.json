@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "CF AI CV Tuner",
+  "version": "0.0.1",
+  "description": "Analyze job pages against your DOCX CV with Cloudflare Workers AI; edit and export tailored PDFs/DOCX.",
+  "action": {
+    "default_title": "Analyze this job",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "downloads",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/scrape.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cf-ai-cv-tune@example.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}

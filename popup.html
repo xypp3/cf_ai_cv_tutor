@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>CF AI CV Tuner</title>
+    <style>
+      body { font-family: sans-serif; min-width: 280px; margin: 12px; }
+      button { margin-right: 8px; }
+      #status { margin-top: 8px; font-size: 12px; color: #555; }
+    </style>
+  </head>
+  <body>
+    <h3>CF AI CV Tuner</h3>
+    <div>
+      <button id="analyze-btn">Analyze this job</button>
+      <button id="edit-btn">Open editor</button>
+    </div>
+    <div id="status"></div>
+    <div id="result"></div>
+    <script type="module" src="/src/popup/index.ts"></script>
+  </body>
+</html>

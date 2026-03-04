@@ -1,0 +1,7 @@
+- Replace placeholder DOCX parsing with real client-side parser (unzip word/document.xml) and keep plaintext cached locally; still allow optional upload to Worker.
+- Implement optional encryption for local storage (WebCrypto AES-GCM with passphrase) and tighten UI messaging for missing Worker creds.
+- Build out Cloudflare Worker: multipart parse + stream DOCX to R2, hash + KV metadata, derive plaintext/JSON, and Workers AI call with JSON schema validation.
+- Add bundler (Vite) config to emit background.js, content/scrape.js, popup.js, options.js, editor.js from TS sources; wire webextension-polyfill.
+- Integrate TipTap editor with suggestion sidebar, accept/reject actions, autosave, and export (pdf-lib for PDF, docx for DOCX).
+- Enhance upload helper for job sites (feature-flag per site) and add settings in options page.
+- Add real tests: unit tests for scraping heuristics, storage, and DOCX parsing; integration tests for Worker endpoints (mock R2/KV) once bundler/test runner is set up.

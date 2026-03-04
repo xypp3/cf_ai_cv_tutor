@@ -1,0 +1,22 @@
+{
+  "name": "cf-ai-cv-tune",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/smoke.test.js",
+    "build": "npx vite build && cp manifest*.json dist/",
+    "dev": "npx vite dev"
+  },
+  "dependencies": {
+    "@tiptap/core": "^2.6.6",
+    "@tiptap/pm": "^2.6.6",
+    "@tiptap/starter-kit": "^2.6.6",
+    "jszip": "^3.10.1",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.4.21"
+  }
+}

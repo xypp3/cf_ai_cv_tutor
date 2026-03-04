@@ -20,6 +20,14 @@ WebExtension (Chrome + Firefox) that analyzes a job page, compares it to the use
 - `GET /cv/latest` -> stream DOCX; `GET /cv/plain` -> structured text/JSON (computed if hash mismatch).
 - `POST /analyze` with `{ job_description, cv_text, target_role }` -> Workers AI JSON `{ score, summary, strengths[], gaps[], suggested_edits[], tailored_bullets[] }`.
 
+## Cloudflare Worker & AI details
+- Storage: R2 bucket holds raw DOCX; KV (or D1) tracks metadata `{hash, updated_at, source: manual_upload|google_drive}` and caches derived plaintext/JSON keyed by hash.
+- Upload path: options page sends `multipart/form-data` with DOCX to `/cv/upload`; Worker streams to R2, computes hash, updates KV, immediately derives plaintext/JSON for cache.
+- Google Docs path: options page passes short-lived Drive access token + doc id to `/cv/upload/google`; Worker fetches export as DOCX, stores to R2, same derivation and caching.
+- AI call: `/analyze` uses Workers AI (e.g., `@cf/meta/llama-3.1-8b-instruct` or `@cf/mistral/mistral-7b-instruct`) with a strict JSON schema enforced by prompt + response validator; retries with temperature=0.2 on schema failure.
+- Response schema (example): `{ score: number 0-100, summary: string <= 80 words, strengths: string[], gaps: string[], suggested_edits: [{ section, before, after, rationale }], tailored_bullets: string[] }`.
+- Security: require bearer token (user-provided CF API token) on Worker endpoints; consider signed, short-lived upload URLs if direct uploads are preferred. No secrets stored in Worker responses; no sync storage for tokens.
+
 ## User Flow
 1) User installs extension, opens Options, uploads default DOCX (or links Google Doc); Worker caches text.
 2) On a job page, user opens popup and hits “Analyze this job”.

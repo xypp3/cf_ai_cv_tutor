@@ -1,0 +1,5 @@
+# Changelog
+- Added detailed Cloudflare Worker focus in `spec.md`, covering DOCX upload from options page, R2/KV storage, plaintext derivation, Workers AI schema/flow, and security/auth approach. This keeps Cloudflare AI Workers central to the design.
+- Scaffolded project per spec: manifest, popup/options/editor HTML, TypeScript stubs for background orchestration, content scraping, options-based DOCX upload to Worker, popup flow, scraping heuristics, AI client, storage placeholders, and a Worker skeleton for R2/KV + Workers AI endpoints.
+- Implemented real DOCX parsing via JSZip (word/document.xml) with hashing; options page now caches plaintext locally and the editor auto-loads cached CV text into a contenteditable (TipTap-ready placeholder). Added JSZip dependency.
+- Integrated TipTap (StarterKit) in the editor to auto-load cached CV text, provide basic editing, and added PDF export via pdf-lib. Added Vite config and dependencies (@tiptap, pdf-lib, vite, typescript) to support bundling.
