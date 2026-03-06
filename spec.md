@@ -54,3 +54,13 @@ WebExtension (Chrome + Firefox) that analyzes a job page, compares it to the use
 - Where to run PDF render (client vs Worker headless chrome) based on fidelity/perf.
 - Encryption approach for local DOCX (WebCrypto AES-GCM with user passphrase?).
 - Site-specific upload helpers gated behind feature flags.
+
+## Tech
+Vite - bundling, to run vite always use "npx vite ..."
+ReactJs - UI library
+WorkersAI - Cloudflare workers AI for AI model
+
+## MVP
+1. User prompt to upload CV as plaintext
+2. On job website, button to scrape contents and send contents + CV to WorkersAI for analysis
+3. Return score and also some key word changes
