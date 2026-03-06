@@ -113,6 +113,7 @@ function ResultCard({ result }: { result: AnalyzeResponse }) {
     strengths = [],
     gaps = [],
     keyword_suggestions = [],
+    _raw_text,
   } = result;
 
   return (
@@ -134,6 +135,12 @@ function ResultCard({ result }: { result: AnalyzeResponse }) {
 {JSON.stringify(result, null, 2)}
         </pre>
       </details>
+      {_raw_text && (
+        <details className="text-xs text-slate-400">
+          <summary className="cursor-pointer">Raw text</summary>
+          <pre className="whitespace-pre-wrap break-words mt-1">{_raw_text}</pre>
+        </details>
+      )}
     </div>
   );
 }

@@ -179,6 +179,7 @@ async function callCloudflareAi({
   const normalizedModel = normalizeModel(model);
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${normalizedModel}`;
   const prompt = buildCfPrompt(jobDescription, cvText);
+  const maxTokens = 20000;
 
   let response: Response;
   try {
@@ -189,7 +190,14 @@ async function callCloudflareAi({
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ ...prompt, stream: false }),
+      // Disable streaming; read full body to avoid partial JSON.
+      body: JSON.stringify({
+        ...prompt,
+        stream: false,
+        max_output_tokens: maxTokens,
+        max_tokens: maxTokens,
+        temperature: 0.2,
+      }),
     });
   } catch (err: any) {
     console.error("[CV Tailor][bg] CF AI network error", err);
@@ -202,11 +210,32 @@ async function callCloudflareAi({
     throw new Error(`Cloudflare AI failed (${response.status}): ${text || "unknown"}`);
   }
 
-  const data = (await response.json()) as any;
-  console.debug("[CV Tailor][bg] CF AI raw result", data);
-  const text = extractCfText(data);
+  const rawText = await readResponseBody(response);
+  console.debug("[CV Tailor][bg] CF AI raw text", rawText);
+
+  const mergedText = parseSseText(rawText) ?? rawText;
+  console.debug("[CV Tailor][bg] CF AI merged text", mergedText);
+
+  let data: any;
+  try {
+    data = JSON.parse(mergedText);
+  } catch (_) {
+    data = undefined;
+  }
+
+  if (data?.result && typeof data.result === "object" && !Array.isArray(data.result)) {
+    if ("score" in data.result || "summary" in data.result) {
+      return data.result as AnalyzeResponse;
+    }
+  }
+
+  const text = data ? extractCfText(data) : mergedText;
+  console.debug("[CV Tailor][bg] CF AI extracted text", text);
   const parsed = coerceAnalysisJson(text);
-  return parsed;
+  if (!parsed.summary && text) {
+    parsed.summary = typeof text === "string" ? text.slice(0, 400) : "Parsed with no summary";
+  }
+  return { ...parsed, _raw_text: typeof text === "string" ? text : undefined };
 }
 
 function buildCfPrompt(job: any, cvText: string) {
@@ -270,9 +299,10 @@ function coerceAnalysisJson(text: any): AnalyzeResponse {
         try {
           return JSON.parse(match) as AnalyzeResponse;
         } catch (err) {
-          console.warn("[CV Tailor][bg] JSON parse failed", err);
+          console.warn("[CV Tailor][bg] JSON parse failed", err, "match:", match);
         }
       }
+      console.warn("[CV Tailor][bg] Could not parse, returning trimmed summary");
     }
     return { summary: trimmed.slice(0, 400) };
   }
@@ -283,21 +313,33 @@ function coerceAnalysisJson(text: any): AnalyzeResponse {
 function extractCfText(data: any): any {
   if (!data) return "";
 
-  const candidates = [
-    data?.result?.response,
-    data?.result?.output_text,
-    data?.result?.output?.text,
-    Array.isArray(data?.result?.output)
-      ? data.result.output.map((o: any) => o?.text || o).join("\n")
-      : null,
-    data?.result?.choices?.[0]?.message?.content,
-    data?.result?.choices?.[0]?.text,
-    data?.result,
-    data?.response,
-    data,
-  ];
+  const candidates: string[] = [];
 
-  return candidates.find((c) => typeof c === "string" && c.trim().length > 0) || "";
+  const pushMaybe = (v: any) => {
+    if (typeof v === "string" && v.trim().length > 0) candidates.push(v.trim());
+  };
+
+  pushMaybe(data?.result?.choices?.[0]?.message?.content);
+  pushMaybe(data?.result?.choices?.[0]?.text);
+  pushMaybe(data?.result?.response);
+  pushMaybe(data?.result?.output_text);
+  pushMaybe(data?.result?.output?.text);
+  if (Array.isArray(data?.result?.output)) {
+    const joined = data.result.output.map((o: any) => o?.text || o).join("\n");
+    pushMaybe(joined);
+  }
+  pushMaybe(data?.response);
+  pushMaybe(data?.result);
+  pushMaybe(typeof data === "string" ? data : "");
+
+  if (candidates.length === 0) return "";
+
+  const withBraces = candidates.filter((c) => c.includes("{") && c.includes("}"));
+  if (withBraces.length > 0) {
+    return withBraces.sort((a, b) => b.length - a.length)[0];
+  }
+
+  return candidates.sort((a, b) => b.length - a.length)[0];
 }
 
 function normalizeModel(model?: string) {
@@ -318,4 +360,52 @@ function findJsonBlock(str: string) {
     return str.slice(first, last + 1);
   }
   return null;
+}
+
+async function readResponseBody(response: Response): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    return response.text();
+  }
+
+  const decoder = new TextDecoder();
+  let done = false;
+  const chunks: string[] = [];
+
+  while (!done) {
+    const { value, done: readerDone } = await reader.read();
+    if (value) {
+      chunks.push(decoder.decode(value, { stream: true }));
+    }
+    done = readerDone;
+  }
+  chunks.push(decoder.decode());
+
+  return chunks.join("");
+}
+
+function parseSseText(text: string): string | null {
+  if (!text || !text.includes("data:")) return null;
+  const lines = text.split(/\r?\n/);
+  let aggregated = "";
+
+  for (const line of lines) {
+    if (!line.startsWith("data:")) continue;
+    const payload = line.replace(/^data:\s*/, "");
+    if (payload === "[DONE]") break;
+    try {
+      const obj = JSON.parse(payload);
+      if (typeof obj.response === "string") aggregated += obj.response;
+      else if (typeof obj.output_text === "string") aggregated += obj.output_text;
+      else if (typeof obj.p === "string") aggregated += obj.p;
+      else if (typeof obj.delta === "string") aggregated += obj.delta;
+      else if (obj?.choices?.[0]?.delta?.content) {
+        aggregated += obj.choices[0].delta.content;
+      }
+    } catch (_) {
+      // ignore malformed SSE chunk
+    }
+  }
+
+  return aggregated || null;
 }

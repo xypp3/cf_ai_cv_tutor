@@ -22,3 +22,10 @@
 - Options now accept Cloudflare account ID, API token, and model; stored locally for direct Workers AI calls when mock mode is off and no custom analyze endpoint is provided.
 - Background routes analysis to either a custom endpoint, or to Cloudflare AI via `accounts/{id}/ai/run/{model}` with a JSON-only prompt, and coerces the response into the expected analysis shape.
 - Fixed CF AI URL construction (do not URL-encode the model path; normalize with leading @) and improved error logging/Accept headers.
+- Improved Cloudflare result handling: prefer structured `result` objects, disable streaming, normalize model default to `@cf/meta/llama-3.2-3b-instruct`, and choose the longest brace-containing text before JSON parsing to avoid truncated responses.
+- Added verbose logging of raw/merged/extracted CF texts and expanded SSE aggregation to include token fields (`response`, `output_text`, `p`, `delta`, `choices[].delta.content`).
+
+## 2024-XX-XX (Dev env convenience)
+- Added `.env.development.example` for dev-only CV and Cloudflare credentials, with `.gitignore` covering real env files.
+- Added Vite env typing and option defaults that pull from dev env values when `mode === development` (dev server or `npm run build -- --mode development`).
+- Dev env values now auto-seed storage on load in dev mode when storage is empty, so no manual Save is needed.

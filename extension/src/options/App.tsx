@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 
 export default function OptionsApp() {
-  const [cvText, setCvText] = useState("");
+  const devDefaults = getDevDefaults();
+  const isDevMode = import.meta.env.DEV || import.meta.env.MODE === "development";
+
+  const [cvText, setCvText] = useState(devDefaults.cvText);
   const [mockMode, setMockMode] = useState(false);
   const [endpoint, setEndpoint] = useState("");
-  const [cfAccountId, setCfAccountId] = useState("");
-  const [cfApiToken, setCfApiToken] = useState("");
-  const [cfModel, setCfModel] = useState("@cf/meta/llama-3-8b-instruct");
+  const [cfAccountId, setCfAccountId] = useState(devDefaults.cfAccountId);
+  const [cfApiToken, setCfApiToken] = useState(devDefaults.cfApiToken);
+  const [cfModel, setCfModel] = useState("@cf/meta/llama-3.2-3b-instruct");
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -17,12 +20,34 @@ export default function OptionsApp() {
           setStatus(chrome.runtime.lastError.message);
           return;
         }
-        setCvText(data.cvText || "");
+        setCvText(data.cvText || devDefaults.cvText);
         setMockMode(Boolean(data.mockMode));
         setEndpoint(data.analyzeEndpoint || "");
-        setCfAccountId(data.cfAccountId || "");
-        setCfApiToken(data.cfApiToken || "");
+        setCfAccountId(data.cfAccountId || devDefaults.cfAccountId);
+        setCfApiToken(data.cfApiToken || devDefaults.cfApiToken);
         setCfModel(data.cfModel || "@cf/meta/llama-3.2-3b-instruct");
+
+        const shouldSeed =
+          isDevMode &&
+          devDefaults.hasAny &&
+          !(data.cvText || data.cfAccountId || data.cfApiToken);
+        if (shouldSeed) {
+          chrome.storage.local.set(
+            {
+              cvText: devDefaults.cvText,
+              cfAccountId: devDefaults.cfAccountId,
+              cfApiToken: devDefaults.cfApiToken,
+            },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.warn(
+                  "[CV Tailor][options] Auto-save dev defaults failed",
+                  chrome.runtime.lastError
+                );
+              }
+            }
+          );
+        }
       }
     );
   }, []);
@@ -101,11 +126,11 @@ export default function OptionsApp() {
             />
           </label>
 
-          <label className="block text-sm font-semibold text-slate-100">
-            Cloudflare AI Model
-            <input
-              className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              placeholder="@cf/meta/llama-3-8b-instruct"
+        <label className="block text-sm font-semibold text-slate-100">
+          Cloudflare AI Model
+          <input
+            className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              placeholder="@cf/meta/llama-3.2-3b-instruct"
               value={cfModel}
               onChange={(e) => setCfModel(e.target.value)}
             />
@@ -140,4 +165,15 @@ export default function OptionsApp() {
       </div>
     </div>
   );
+}
+
+function getDevDefaults() {
+  const isDevMode = import.meta.env.DEV || import.meta.env.MODE === "development";
+  if (!isDevMode)
+    return { cvText: "", cfAccountId: "", cfApiToken: "", hasAny: false };
+  const cvText = import.meta.env.VITE_DEV_CV_TEXT || "";
+  const cfAccountId = import.meta.env.VITE_DEV_CF_ACCOUNT_ID || "";
+  const cfApiToken = import.meta.env.VITE_DEV_CF_API_TOKEN || "";
+  const hasAny = Boolean(cvText || cfAccountId || cfApiToken);
+  return { cvText, cfAccountId, cfApiToken, hasAny };
 }
