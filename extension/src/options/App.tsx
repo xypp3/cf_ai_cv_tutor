@@ -4,23 +4,39 @@ export default function OptionsApp() {
   const [cvText, setCvText] = useState("");
   const [mockMode, setMockMode] = useState(false);
   const [endpoint, setEndpoint] = useState("");
+  const [cfAccountId, setCfAccountId] = useState("");
+  const [cfApiToken, setCfApiToken] = useState("");
+  const [cfModel, setCfModel] = useState("@cf/meta/llama-3-8b-instruct");
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    chrome.storage.local.get(["cvText", "mockMode", "analyzeEndpoint"], (data) => {
-      if (chrome.runtime.lastError) {
-        setStatus(chrome.runtime.lastError.message);
-        return;
+    chrome.storage.local.get(
+      ["cvText", "mockMode", "analyzeEndpoint", "cfAccountId", "cfApiToken", "cfModel"],
+      (data) => {
+        if (chrome.runtime.lastError) {
+          setStatus(chrome.runtime.lastError.message);
+          return;
+        }
+        setCvText(data.cvText || "");
+        setMockMode(Boolean(data.mockMode));
+        setEndpoint(data.analyzeEndpoint || "");
+        setCfAccountId(data.cfAccountId || "");
+        setCfApiToken(data.cfApiToken || "");
+        setCfModel(data.cfModel || "@cf/meta/llama-3.2-3b-instruct");
       }
-      setCvText(data.cvText || "");
-      setMockMode(Boolean(data.mockMode));
-      setEndpoint(data.analyzeEndpoint || "");
-    });
+    );
   }, []);
 
   const handleSave = () => {
     chrome.storage.local.set(
-      { cvText, mockMode, analyzeEndpoint: endpoint },
+      {
+        cvText,
+        mockMode,
+        analyzeEndpoint: endpoint,
+        cfAccountId,
+        cfApiToken,
+        cfModel,
+      },
       () => {
         if (chrome.runtime.lastError) {
           setStatus(chrome.runtime.lastError.message);
@@ -68,12 +84,49 @@ export default function OptionsApp() {
             <input
               type="url"
               className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              placeholder="https://example.com/analyze"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
+          placeholder="https://example.com/analyze"
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)}
+          />
+        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label className="block text-sm font-semibold text-slate-100">
+            Cloudflare Account ID
+            <input
+              className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              placeholder="xxxxxxxxxxxxxxxxxxxx"
+              value={cfAccountId}
+              onChange={(e) => setCfAccountId(e.target.value)}
+            />
+          </label>
+
+          <label className="block text-sm font-semibold text-slate-100">
+            Cloudflare AI Model
+            <input
+              className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              placeholder="@cf/meta/llama-3-8b-instruct"
+              value={cfModel}
+              onChange={(e) => setCfModel(e.target.value)}
             />
           </label>
         </div>
+
+        <label className="block text-sm font-semibold text-slate-100">
+          Cloudflare API Token (AI/Workers)
+          <input
+            type="password"
+            className="mt-2 w-full rounded border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            placeholder="Bearer token"
+            value={cfApiToken}
+            onChange={(e) => setCfApiToken(e.target.value)}
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            Stored locally only. Used when mock mode is off and no custom analyze endpoint
+            is set.
+          </p>
+        </label>
+      </div>
 
         <div className="flex items-center gap-3">
           <button

@@ -17,3 +17,8 @@
 - Added multi-entry build for popup, options, background, and content script via `vite.config.ts`, emitting stable filenames for MV2 manifest.
 - React-based popup/options UIs live in `src/popup` and `src/options`; background/content scripts migrated to TypeScript in `src/background.ts` and `src/content-script.ts`.
 - Added Tailwind + PostCSS configs and updated manifest (and public copy) to match built asset names.
+
+## 2024-XX-XX (Cloudflare AI integration)
+- Options now accept Cloudflare account ID, API token, and model; stored locally for direct Workers AI calls when mock mode is off and no custom analyze endpoint is provided.
+- Background routes analysis to either a custom endpoint, or to Cloudflare AI via `accounts/{id}/ai/run/{model}` with a JSON-only prompt, and coerces the response into the expected analysis shape.
+- Fixed CF AI URL construction (do not URL-encode the model path; normalize with leading @) and improved error logging/Accept headers.
