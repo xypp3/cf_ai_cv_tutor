@@ -11,3 +11,9 @@
 - Added Firefox-ready MV2 extension scaffold with popup, background, content script, and options page.
 - Popup now scrapes the active tab, sends it to background, and renders mock/real analysis results with raw JSON.
 - Options page lets users paste plaintext CV, toggle mock mode, and set an analyze endpoint.
+
+## 2024-XX-XX (Vite/React/TS/Tailwind)
+- Converted extension to a Vite React TypeScript project with Tailwind styling (`extension/`).
+- Added multi-entry build for popup, options, background, and content script via `vite.config.ts`, emitting stable filenames for MV2 manifest.
+- React-based popup/options UIs live in `src/popup` and `src/options`; background/content scripts migrated to TypeScript in `src/background.ts` and `src/content-script.ts`.
+- Added Tailwind + PostCSS configs and updated manifest (and public copy) to match built asset names.

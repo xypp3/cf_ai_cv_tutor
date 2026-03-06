@@ -1,6 +1,8 @@
+import type { AnalyzeResponse } from "./types";
+
 const DEFAULT_ANALYZE_ENDPOINT = "https://example.com/analyze";
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "PING_BACKGROUND") {
     console.debug("[CV Tailor][bg] PING received");
     sendResponse({ type: "PONG_FROM_BACKGROUND" });
@@ -11,16 +13,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.debug("[CV Tailor][bg] ANALYZE_JOB payload", message.payload);
     handleAnalyzeJob(message.payload)
       .then((result) => sendResponse({ ok: true, result }))
-      .catch((error) =>
+      .catch((error: Error) =>
         sendResponse({ ok: false, error: error?.message || String(error) })
       );
-    return true; // keep channel open for async response
+    return true;
   }
 
   return false;
 });
 
-async function handleAnalyzeJob(payload) {
+async function handleAnalyzeJob(payload: any): Promise<AnalyzeResponse> {
   const { jobDescription } = payload || {};
   if (!jobDescription || !jobDescription.text) {
     throw new Error("Missing job description text");
@@ -48,7 +50,7 @@ async function handleAnalyzeJob(payload) {
 
   const endpoint = analyzeEndpoint || DEFAULT_ANALYZE_ENDPOINT;
   console.debug("[CV Tailor][bg] Fetching analyze endpoint", endpoint);
-  let response;
+  let response: Response;
   try {
     response = await fetch(endpoint, {
       method: "POST",
@@ -59,7 +61,7 @@ async function handleAnalyzeJob(payload) {
         target_role: jobDescription.title || "",
       }),
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[CV Tailor][bg] Network error", err);
     throw new Error("Network error: " + (err?.message || String(err)));
   }
@@ -69,12 +71,18 @@ async function handleAnalyzeJob(payload) {
     throw new Error(`Analyze failed (${response.status}): ${text || "unknown"}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as AnalyzeResponse;
   return data;
 }
 
-function runMockAnalysis({ jobDescription, cvText }) {
-  const words = (str) =>
+function runMockAnalysis({
+  jobDescription,
+  cvText,
+}: {
+  jobDescription: { text: string; title?: string };
+  cvText: string;
+}): AnalyzeResponse {
+  const words = (str: string) =>
     str
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, " ")
@@ -83,7 +91,7 @@ function runMockAnalysis({ jobDescription, cvText }) {
 
   const jdWords = words(jobDescription.text || "");
   const cvWords = new Set(words(cvText || ""));
-  const jdFreq = jdWords.reduce((acc, w) => {
+  const jdFreq = jdWords.reduce<Record<string, number>>((acc, w) => {
     acc[w] = (acc[w] || 0) + 1;
     return acc;
   }, {});
@@ -113,14 +121,11 @@ function runMockAnalysis({ jobDescription, cvText }) {
   };
 }
 
-function storageGet(keys) {
+function storageGet(keys: string[]): Promise<Record<string, any>> {
   return new Promise((resolve) => {
     chrome.storage.local.get(keys, (result) => {
       if (chrome.runtime.lastError) {
-        console.error(
-          "[CV Tailor][bg] storage.get error",
-          chrome.runtime.lastError
-        );
+        console.error("[CV Tailor][bg] storage.get error", chrome.runtime.lastError);
       }
       resolve(result || {});
     });

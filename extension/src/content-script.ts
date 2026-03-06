@@ -1,6 +1,6 @@
 console.debug("[CV Tailor] Content script loaded on", window.location.href);
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "SCRAPE_JOB") {
     try {
       const scraped = scrapeJobDescription();
@@ -8,15 +8,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ ok: true, jobDescription: scraped });
     } catch (error) {
       console.error("[CV Tailor][content] Scrape error", error);
-      sendResponse({ ok: false, error: error?.message || String(error) });
+      sendResponse({ ok: false, error: (error as Error)?.message || String(error) });
     }
     return true;
   }
   return false;
 });
 
-function scrapeJobDescription() {
-  const title = document.querySelector("h1")?.textContent?.trim() || "";
+type JobDescription = { title?: string; url?: string; text: string; source?: string };
+
+function scrapeJobDescription(): JobDescription {
+  const title =
+    document.querySelector("h1")?.textContent?.trim() || document.title || "";
   const url = window.location.href;
 
   const ldJson = Array.from(
@@ -36,7 +39,6 @@ function scrapeJobDescription() {
       title: ldJson.title || title,
       url,
       text: cleanText(ldJson.description),
-      raw: ldJson,
       source: "ld+json",
     };
   }
@@ -61,7 +63,7 @@ function scrapeJobDescription() {
   };
 }
 
-function cleanText(str) {
+function cleanText(str: string) {
   return (str || "")
     .replace(/\s+/g, " ")
     .replace(/[\r\n]+/g, " ")

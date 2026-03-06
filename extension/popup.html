@@ -1,45 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CV Tailor</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        min-width: 240px;
-        padding: 12px;
-      }
-      #header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      #open-options {
-        border: 1px solid #ccc;
-        background: #f8f8f8;
-        padding: 4px 8px;
-        font-size: 12px;
-        cursor: pointer;
-      }
-      button {
-        padding: 8px 12px;
-        width: 100%;
-      }
-      #status {
-        margin-top: 8px;
-        font-size: 12px;
-      }
-    </style>
+    <link rel="stylesheet" href="/src/styles/index.css" />
   </head>
-  <body>
-    <div id="header">
-      <h3 style="margin: 0;">CV Tailor</h3>
-      <button id="open-options" title="Open options">Add CV</button>
-    </div>
-    <div id="cv-status">Checking CV…</div>
-    <button id="analyze">Analyze this job</button>
-    <div id="status">Waiting…</div>
-    <div id="result"></div>
-    <script src="popup.js"></script>
+  <body class="bg-slate-950 text-slate-50">
+    <div id="root"></div>
+    <script type="module" src="/src/popup/main.tsx"></script>
   </body>
 </html>

@@ -1,54 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CV Tailor Options</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        padding: 16px;
-        max-width: 480px;
-      }
-      textarea {
-        width: 100%;
-        min-height: 180px;
-      }
-      label {
-        display: block;
-        margin-top: 12px;
-      }
-      .row {
-        margin: 8px 0;
-      }
-    </style>
+    <link rel="stylesheet" href="/src/styles/index.css" />
   </head>
-  <body>
-    <h2>CV Tailor Options</h2>
-    <p>Paste your CV as plaintext (MVP) and toggle mock mode for offline testing.</p>
-
-    <label for="cvText">CV Text</label>
-    <textarea id="cvText" placeholder="Paste your CV text here"></textarea>
-
-    <div class="row">
-      <label>
-        <input type="checkbox" id="mockMode" />
-        Enable mock analysis (no network request)
-      </label>
-    </div>
-
-    <label for="endpoint">Analyze endpoint (optional)</label>
-    <input
-      id="endpoint"
-      type="url"
-      placeholder="https://example.com/analyze"
-      style="width: 100%;"
-    />
-
-    <div class="row">
-      <button id="save">Save</button>
-      <span id="status" style="margin-left: 8px; font-size: 12px;"></span>
-    </div>
-
-    <script src="options.js"></script>
+  <body class="bg-slate-950 text-slate-50">
+    <div id="root"></div>
+    <script type="module" src="/src/options/main.tsx"></script>
   </body>
 </html>
