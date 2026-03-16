@@ -5,6 +5,8 @@ This is project is a browser to help fine tune your CV for each job description.
 It uses Cloudflare Workers AI to analyse your CV against the job description and suggest improvements.
 This project is batters **not** included so you'll need to use your own Cloudflare API keys and such.
 
+![example screenshot](./demo.png)
+
 ## How to run
 
 Since this is a browser extension all installing and building is done in the `extension/` directory.
